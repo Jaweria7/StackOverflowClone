@@ -2,7 +2,6 @@ package com.stackoverflow.controller;
 
 import com.stackoverflow.dto.comments.CommentRequestDTO;
 import com.stackoverflow.dto.questions.QuestionDetailsDTO;
-import com.stackoverflow.entity.Comment;
 import com.stackoverflow.exception.UserNotAuthenticatedException;
 import com.stackoverflow.service.AnswerService;
 import com.stackoverflow.service.CommentService;
@@ -12,7 +11,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,22 +45,16 @@ public class CommentController {
                     QuestionDetailsDTO questionDetailsDTO = questionService.getQuestionById(questionId);
                     model.addAttribute("question", questionDetailsDTO);
                 }
+
                 return "redirect:/questions/" + questionId;
             }
 
-            String formattedTime = "";
-
-            if (questionId != null) {
-                formattedTime = commentService.createComment(commentRequestDTO, questionId);
-            }
-
-            model.addAttribute("formattedTime", formattedTime);
+            commentService.createComment(commentRequestDTO, questionId);
         } catch (UserNotAuthenticatedException e) {
             return "redirect:/users/login";
         } catch (Exception e) {
             return "redirect:/questions/" + questionId + "?error=Failed to create comment";
         }
-
 
         return "redirect:/questions/" + questionId;
     }
@@ -68,8 +64,9 @@ public class CommentController {
                               @PathVariable(required = false) Long commentId,
                               @Valid @ModelAttribute("commentRequestDTO") CommentRequestDTO commentRequestDTO,
                               BindingResult bindingResult,
-                              Model model){
+                              Model model) {
         List<String> errorsList = new ArrayList<>();
+
         try {
             if (bindingResult.hasErrors()) {
                 errorsList = bindingResult.getFieldErrors().stream()
@@ -80,15 +77,13 @@ public class CommentController {
                     QuestionDetailsDTO questionDetailsDTO = questionService.getQuestionById(questionId);
                     model.addAttribute("question", questionDetailsDTO);
                 }
+
                 return "redirect:/questions/" + questionId;
             }
-            String formattedTime = "";
 
             if (questionId != null) {
-                formattedTime = commentService.createComment(commentRequestDTO, questionId, commentId);
+                commentService.createComment(commentRequestDTO, questionId, commentId);
             }
-
-            model.addAttribute("formattedTime", formattedTime);
         } catch (UserNotAuthenticatedException e) {
             return "redirect:/users/login";
         } catch (Exception e) {
@@ -109,6 +104,7 @@ public class CommentController {
             if (questionId != null) {
                 model.addAttribute("question", questionService.getQuestionById(questionId));
             }
+
             return "redirect:/questions/" + questionId;
         }
 
@@ -122,6 +118,7 @@ public class CommentController {
                                 @PathVariable(required = false) Long questionId,
                                 @PathVariable(required = false) Long answerId) {
         commentService.delete(commentId);
+
         return "redirect:/questions/" + questionId;
     }
 }

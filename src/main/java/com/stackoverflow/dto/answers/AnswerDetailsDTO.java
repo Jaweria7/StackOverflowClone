@@ -15,8 +15,8 @@ import java.util.Set;
 @ToString
 public class AnswerDetailsDTO {
 
-    boolean upvoted = false;
-    boolean downvoted = false;
+    private boolean upvoted = false;
+    private boolean downvoted = false;
     private Long Id;
     private String body;
     private LocalDateTime createdAt;

@@ -33,16 +33,14 @@ public class QuestionController {
     private final HtmlUtils htmlUtils;
     private final ModelMapper modelMapper;
     private final VoteService voteService;
-    private final CommentService commentService;
     private final TagService tagService;
 
-    public QuestionController(QuestionService questionService, UserServiceImpl userService, HtmlUtils htmlUtils, ModelMapper modelMapper, VoteService voteService, CommentService commentService, CommentService commentService1, TagService tagService) {
+    public QuestionController(QuestionService questionService, UserServiceImpl userService, HtmlUtils htmlUtils, ModelMapper modelMapper, VoteService voteService, TagService tagService) {
         this.questionService = questionService;
         this.userService = userService;
         this.htmlUtils = htmlUtils;
         this.modelMapper = modelMapper;
         this.voteService = voteService;
-        this.commentService = commentService1;
         this.tagService = tagService;
     }
 
@@ -72,6 +70,7 @@ public class QuestionController {
         } else {
             model.addAttribute("loggedIn", null);
         }
+
         model.addAttribute("users", null);
         model.addAttribute("tags", null);
         model.addAttribute("current_page", page);
@@ -86,7 +85,6 @@ public class QuestionController {
 
     @GetMapping("/{id}")
     public String getQuestionById(@PathVariable("id") Long questionId, Model model) {
-
         try {
             QuestionDetailsDTO question = questionService.getQuestionById(questionId);
             List<String> questionTags = question.getTags().stream().
@@ -94,7 +92,6 @@ public class QuestionController {
                     .collect(Collectors.toList());
             List<QuestionDetailsDTO> relatedQuestions = questionService.getRelatedQuestionsByTags(questionTags, questionId);
 
-            System.out.println("question = " + question);
             model.addAttribute("question", question);
             model.addAttribute("users", null);
             model.addAttribute("tags", null);
@@ -126,14 +123,15 @@ public class QuestionController {
     @PostMapping("/create")
     public String createQuestion(@ModelAttribute("questionRequestDTO") QuestionRequestDTO questionRequestDTO,
                                  @RequestParam("tagsList") String tags) {
-        System.out.println(questionRequestDTO);
         QuestionDetailsDTO createdQuestion = questionService.createQuestion(questionRequestDTO);
+
         return "redirect:/questions/" + createdQuestion.getId();
     }
 
     @GetMapping("/{id}/update")
     public String showUpdateQuestionForm(@PathVariable("id") Long questionId, Model model) {
         QuestionDetailsDTO existingQuestion = questionService.getQuestionById(questionId);
+
         if (existingQuestion == null) {
             return "redirect:/questions?error=NotFound";
         }
@@ -161,10 +159,7 @@ public class QuestionController {
                                  @ModelAttribute("questionRequestDTO") QuestionRequestDTO updatedQuestionDetails,
                                  Model model) {
         questionService.updateQuestion(questionId, updatedQuestionDetails);
-
         updatedQuestionDetails.setUpdatedAt(LocalDateTime.now());
-        String formattedTime = StackoverflowCloneApplication.formatTime(updatedQuestionDetails.getUpdatedAt());
-        model.addAttribute("formattedTime", formattedTime);
 
         return "redirect:/questions/" + questionId;
     }
@@ -231,6 +226,5 @@ public class QuestionController {
 
         return "redirect:/questions/" + questionId;
     }
-
 }
 

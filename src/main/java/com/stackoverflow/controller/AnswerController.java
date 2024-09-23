@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @Controller
 @RequestMapping("/questions/{questionId}/answers")
 public class AnswerController {
@@ -51,32 +50,33 @@ public class AnswerController {
             BindingResult result,
             Model model) {
 
-        List<String> errorsList = new ArrayList<>();
-
         if (!userService.isUserLoggedIn()) {
             return "redirect:/users/login";
         }
 
+        List<String> errorsList = new ArrayList<>();
+
         if (result.hasErrors()) {
+            QuestionDetailsDTO questionDetailsDTO = questionService.getQuestionById(questionId);
             errorsList = result.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.toList());
-            model.addAttribute("errors_answers", errorsList);
 
-            QuestionDetailsDTO questionDetailsDTO = questionService.getQuestionById(questionId);
+            model.addAttribute("errors_answers", errorsList);
             model.addAttribute("question", questionDetailsDTO);
 
             return "redirect:/questions/" + questionId;
         }
 
         try {
-            AnswerDetailsDTO answerDetailsDTO = answerService.createAnswer(answerRequestDTO, questionId);
+            answerService.createAnswer(answerRequestDTO, questionId);
         } catch (UserNotAuthenticatedException e) {
             return "redirect:/users/login";
         } catch (Exception e) {
             errorsList.add(e.getMessage());
-            model.addAttribute("errors_answers", errorsList);
             QuestionDetailsDTO questionDetailsDTO = questionService.getQuestionById(questionId);
+
+            model.addAttribute("errors_answers", errorsList);
             model.addAttribute("question", questionDetailsDTO);
 
             return "redirect:/questions/" + questionId;
@@ -89,6 +89,7 @@ public class AnswerController {
     public String editAnswer(@PathVariable Long answerId,
                              @PathVariable("questionId") Long questionId,
                              Model model) {
+
         QuestionDetailsDTO question = questionService.getQuestionById(questionId);
         AnswerDetailsDTO answerDetailsDTO = answerService.getAnswerById(answerId);
         List<String> questionTags = question.getTags().stream().
@@ -113,7 +114,6 @@ public class AnswerController {
         model.addAttribute("updatingAnswer", answerDetailsDTO);
         model.addAttribute("relatedQuestions", relatedQuestions);
 
-
         return "questions/detail";
     }
 
@@ -133,12 +133,12 @@ public class AnswerController {
         List<String> errorsList = new ArrayList<>();
 
         if (result.hasErrors()) {
+            AnswerDetailsDTO existingAnswer = answerService.getAnswerById(answerId);
             errorsList = result.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.toList());
-            model.addAttribute("errors_answers", errorsList);
 
-            AnswerDetailsDTO existingAnswer = answerService.getAnswerById(answerId);
+            model.addAttribute("errors_answers", errorsList);
             model.addAttribute("question", question);
             model.addAttribute("users", null);
             model.addAttribute("tags", null);
@@ -150,16 +150,12 @@ public class AnswerController {
 
         try {
             answerService.update(answerId, questionId, answerRequestDTO);
-
             AnswerDetailsDTO updatedAnswer = answerService.getAnswerById(answerId);
-            String formattedTime = StackoverflowCloneApplication.formatTime(updatedAnswer.getUpdatedAt());
-            model.addAttribute("formattedTime", formattedTime);
-
         } catch (ResourceNotFoundException e) {
-            errorsList.add(e.getMessage());
-            model.addAttribute("errors_answers", errorsList);
-
             AnswerDetailsDTO existingAnswer = answerService.getAnswerById(answerId);
+            errorsList.add(e.getMessage());
+
+            model.addAttribute("errors_answers", errorsList);
             model.addAttribute("answer", existingAnswer);
 
             return "questions/detail";
@@ -171,6 +167,7 @@ public class AnswerController {
     @PostMapping("/{answerId}/deleteAnswer")
     public String deleteAnswer(@PathVariable Long answerId, @PathVariable Long questionId) {
         answerService.delete(answerId);
+
         return "redirect:/questions/" + questionId;
     }
 
@@ -184,6 +181,7 @@ public class AnswerController {
         } catch (Exception e) {
             return "redirect:/questions/" + questionId + "?error=FailedToVote";
         }
+
         return "redirect:/questions/" + questionId;
     }
 
@@ -197,6 +195,7 @@ public class AnswerController {
         } catch (Exception e) {
             return "redirect:/questions/" + questionId + "?error=FailedToVote";
         }
+
         return "redirect:/questions/" + questionId;
     }
 

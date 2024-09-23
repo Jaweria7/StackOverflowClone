@@ -14,12 +14,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class TagController {
     private final TagService tagService;
     private final UserService userService;
-    private final ModelMapper modelMapper;
 
-    public TagController(TagService tagService, UserService userService, ModelMapper modelMapper) {
+    public TagController(TagService tagService, UserService userService) {
         this.tagService = tagService;
         this.userService = userService;
-        this.modelMapper = modelMapper;
     }
 
     @GetMapping("/tags")

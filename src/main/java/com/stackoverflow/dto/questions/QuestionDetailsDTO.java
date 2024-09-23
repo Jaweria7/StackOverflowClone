@@ -17,9 +17,9 @@ import java.util.Set;
 @ToString
 public class QuestionDetailsDTO {
 
-    boolean upvoted = false;
-    boolean downvoted = false;
-    private Boolean isSaved = false;
+    private boolean upvoted = false;
+    private boolean downvoted = false;
+    private boolean isSaved = false;
     private Long id;
     private String title;
     private String body;

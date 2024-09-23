@@ -45,7 +45,6 @@ public class UserController {
             "https://img.freepik.com/free-photo/afro-man_1368-2735.jpg?size=626&ext=jpg"
     };
 
-
     @Autowired
     public UserController(UserService userService, QuestionService questionService, TagService tagService) {
         this.userService = userService;
@@ -61,6 +60,7 @@ public class UserController {
     @GetMapping("/register")
     public String register(Model model) {
         model.addAttribute("userRegistrationDTO", new UserRegistrationDTO());
+
         return "users/register";
     }
 
@@ -74,7 +74,9 @@ public class UserController {
             errorsList = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.toList());
+
             model.addAttribute("errors_register", errorsList);
+
             return "users/register";
         }
 
@@ -85,6 +87,7 @@ public class UserController {
         } catch (ResourceAlreadyExistsException e) {
             errorsList.add(e.getMessage());
             model.addAttribute("errors_register", errorsList);
+
             return "users/register";
         }
 
@@ -93,20 +96,19 @@ public class UserController {
 
     @GetMapping("/{id}")
     public String getUserById(@PathVariable("id") Long userId, Model model) {
+        UserDetailsDTO userDetails = userService.getUserById(userId);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
             return "redirect:/users/login";
         }
 
-        UserDetailsDTO userDetails = userService.getUserById(userId);
-        model.addAttribute("userDetails", userDetails);
-        model.addAttribute("loggedIn", userService.getLoggedInUserOrNull());
-
         List<QuestionDetailsDTO> questions = questionService.getQuestionsByUser(userId);
         List<QuestionDetailsDTO> answered = questionService.getAnsweredQuestions(userId);
         List<QuestionDetailsDTO> saved = questionService.getSavedQuestionsByUser(userId);
 
+        model.addAttribute("userDetails", userDetails);
+        model.addAttribute("loggedIn", userService.getLoggedInUserOrNull());
         model.addAttribute("questions", questions);
         model.addAttribute("answered", answered);
         model.addAttribute("saved", saved);
@@ -120,12 +122,12 @@ public class UserController {
                              @Valid @ModelAttribute("userRegistrationDTO") UserUpdateDTO userUpdateDTO,
                              BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
+            UserDetailsDTO userDetails = userService.getUserById(userId);
             List<String> errorsList = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.toList());
 
             model.addAttribute("errors_update", errorsList);
-            UserDetailsDTO userDetails = userService.getUserById(userId);
             model.addAttribute("userDetails", userDetails);
             model.addAttribute("loggedIn", userService.getLoggedInUserOrNull());
 
@@ -135,10 +137,12 @@ public class UserController {
         try {
             userService.updateUser(userId, userUpdateDTO);
         } catch (Exception e) {
-            model.addAttribute("error_message", "An error occurred while updating your profile.");
             UserDetailsDTO userDetails = userService.getUserById(userId);
+
+            model.addAttribute("error_message", "An error occurred while updating your profile.");
             model.addAttribute("userDetails", userDetails);
             model.addAttribute("loggedIn", userService.getLoggedInUserOrNull());
+
             return "redirect:/users/" + userId;
         }
 
@@ -152,6 +156,7 @@ public class UserController {
     @GetMapping("/change-password/{id}")
     public String changePasswordForm(@PathVariable("id") Long userId, Model model) {
         model.addAttribute("userId", userId);
+
         return "users/change_password_page";
     }
 
@@ -175,6 +180,7 @@ public class UserController {
                            @RequestParam(value = "search", defaultValue = "") String searchQuery,
                            Model model) {
         Page<UserViewDTO> paginatdUsers = userService.getAllUsersWithCounts(page, size, searchQuery);
+
         model.addAttribute("users", paginatdUsers.getContent());
         model.addAttribute("questions", null);
         model.addAttribute("tags", null);
@@ -187,5 +193,4 @@ public class UserController {
 
         return "users/user";
     }
-
 }
